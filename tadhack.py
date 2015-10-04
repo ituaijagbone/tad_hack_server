@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, datetime
 from flask import Flask, request, redirect, url_for, jsonify, send_from_directory
 from werkzeug import secure_filename
 
@@ -10,11 +10,11 @@ HOST_URL = "http://ec2-54-86-44-93.compute-1.amazonaws.com:2000/"
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-clarify.Client('aQjWREdRGS5OZ1hj+o2RVzgM7oKuHzhRbu2GI8E7rid9Q')
+client = clarify.Client('aQjWREdRGS5OZ1hj+o2RVzgM7oKuHzhRbu2GI8E7rid9Q')
 
 def send_to_clarify(media_name, media_url):
     client.create_bundle(name=media_name,
-        media_url=media_url)
+        media_url=media_url, notify_url=HOST_URL + 'indexsuccess')
 
 @app.route('/')
 def hello_world():
@@ -50,7 +50,7 @@ def index_tropo():
     for file in uploaded_files:
         print(file)
         if file :
-            filename = 's_' + secure_filename('Journal_' + datetime.datetime.now().strftime("%B %d, %Y %I:%M:%S%p"))
+            filename = 's_' + secure_filename('Journal_' + datetime.datetime.now().strftime("%B %d, %Y %I:%M:%S%p") + ".mp3")
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             filenames.append({'filename': filename, 'url': HOST_URL + 'music/' + filename})
 
@@ -74,11 +74,8 @@ def search_clarify():
     hits = []
     for item in items:
         bundle = client.get_bundle(item['href'])
-        location = bundle[:1]
-        if location == 'l':
-            hits[index] = {'filename': bundle[2:], 'type': 'l'}
-        else: 
-            hits[index] = {'filename': bundle[2:], 'type': 's'}
+        print(bundle)
+        hits.append(bundle['name'])
         ++index
     
     return jsonify({'result':hits})
@@ -89,6 +86,11 @@ def get_journals():
     files = [f[2:] for f in dirs if f[:1] == 's']
     count = len(files)
     return jsonify({'count':count, 'files': files})
+
+@app.route('/indexsuccess', methods=['PUT', 'POST'])
+def index_success():
+    print(request.get_json(force=True))
+    return jsonify({'success': 'true'})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=int("2000"), debug=True)
