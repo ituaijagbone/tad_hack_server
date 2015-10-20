@@ -10,7 +10,7 @@ HOST_URL = "http://ec2-54-86-44-93.compute-1.amazonaws.com:2000/"
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-client = clarify.Client('aQjWREdRGS5OZ1hj+o2RVzgM7oKuHzhRbu2GI8E7rid9Q')
+client = clarify.Client('')
 
 def send_to_clarify(media_name, media_url):
     client.create_bundle(name=media_name,
